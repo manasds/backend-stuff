@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 1: Project Setup & Drizzle Schema</title>
+  <style>
+    :root {
+      --bg: #1a1a2e;
+      --surface: #16213e;
+      --border: #0f3460;
+      --accent: #e94560;
+      --accent2: #533483;
+      --text: #e0e0e0;
+      --text-muted: #a0a0b0;
+      --code-bg: #0d1117;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+    h1 { font-size: 2rem; margin-bottom: 0.5rem; color: #fff; }
+    h2 { font-size: 1.3rem; margin-top: 2rem; margin-bottom: 0.75rem; color: var(--accent); }
+    h3 { font-size: 1.1rem; margin-top: 1.5rem; margin-bottom: 0.5rem; color: var(--accent2); }
+    p { margin-bottom: 1rem; }
+    .meta { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 2rem; }
+    code {
+      font-family: var(--mono);
+      background: var(--code-bg);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.9em;
+    }
+    pre {
+      background: var(--code-bg);
+      padding: 1rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+      border: 1px solid var(--border);
+    }
+    pre code { background: none; padding: 0; }
+    blockquote {
+      border-left: 3px solid var(--accent);
+      padding-left: 1rem;
+      margin: 1rem 0;
+      color: var(--text-muted);
+    }
+    .check { color: #4ade80; font-weight: bold; }
+    .tip { background: #1e3a5f; border-left: 3px solid #60a5fa; padding: 0.75rem 1rem; border-radius: 0 8px 8px 0; margin: 1rem 0; }
+    .cmd { background: #0d1117; padding: 0.75rem 1rem; border-radius: 6px; margin: 0.5rem 0; }
+    .cmd span { color: #4ade80; }
+    a { color: #60a5fa; }
+    a:hover { color: #93c5fd; }
+    hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+    .filepath { color: #facc15; font-family: var(--mono); font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+<h1>Project Setup &amp; Drizzle Schema</h1>
+<p class="meta">Lesson 1 &middot; Recipe Manager API</p>
+
+<h2>What we're building</h2>
+<p>
+A Recipe Manager API with these entities:
+</p>
+<ul>
+  <li><strong>Recipes</strong> — title, description, prep/cook time, difficulty</li>
+  <li><strong>Ingredients</strong> — name, base unit</li>
+  <li><strong>RecipeIngredients</strong> (join table with quantity) — many-to-many</li>
+  <li><strong>Categories &amp; Tags</strong> — many-to-many via join tables</li>
+</ul>
+
+<h2>Step 1: Scaffold the project</h2>
+<div class="cmd">
+  <span>$</span> mkdir recipe-api && cd recipe-api && npm init -y
+</div>
+<div class="cmd">
+  <span>$</span> npm install hono @hono/zod-openapi zod drizzle-orm postgres
+</div>
+<div class="cmd">
+  <span>$</span> npm install -D typescript @types/node drizzle-kit tsx
+</div>
+
+<h2>Step 2: TypeScript config</h2>
+<p>Create <span class="filepath">tsconfig.json</span>:</p>
+<pre><code>{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "outDir": "dist",
+    "strict": true,
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx"
+  },
+  "include": ["src"]
+}</code></pre>
+
+<h2>Step 3: Drizzle schema</h2>
+<p>Create <span class="filepath">src/db/schema.ts</span> — the heart of our data model:</p>
+<pre><code>import { pgTable, serial, text, integer, pgEnum, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
+
+// --- Enums ---
+export const difficultyEnum = pgEnum('difficulty', ['easy', 'medium', 'hard']);
+
+// --- Recipes ---
+export const recipes = pgTable('recipes', {
+  id: serial('id').primaryKey(),
+  title: text('title').notNull(),
+  description: text('description'),
+  prepTime: integer('prep_time'),       // minutes
+  cookTime: integer('cook_time'),       // minutes
+  difficulty: difficultyEnum('difficulty').default('medium'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// --- Ingredients ---
+export const ingredients = pgTable('ingredients', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull().unique(),
+  baseUnit: text('base_unit'),  // e.g. 'g', 'ml', 'tbsp', 'piece'
+});
+
+// --- Recipe <-> Ingredient (join table with quantity) ---
+export const recipeIngredients = pgTable('recipe_ingredients', {
+  id: serial('id').primaryKey(),
+  recipeId: integer('recipe_id').notNull().references(() => recipes.id, { onDelete: 'cascade' }),
+  ingredientId: integer('ingredient_id').notNull().references(() => ingredients.id, { onDelete: 'cascade' }),
+  quantity: integer('quantity').notNull(),
+  unit: text('unit'),  // optional override of ingredient's baseUnit
+  notes: text('notes'),
+});
+
+// --- Categories ---
+export const categories = pgTable('categories', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull().unique(),
+  slug: text('slug').notNull().unique(),
+});
+
+// --- Recipe <-> Category ---
+export const recipeCategories = pgTable('recipe_categories', {
+  recipeId: integer('recipe_id').notNull().references(() => recipes.id, { onDelete: 'cascade' }),
+  categoryId: integer('category_id').notNull().references(() => categories.id, { onDelete: 'cascade' }),
+}, (t) => ({
+  pk: uniqueIndex('recipe_category_pk').on(t.recipeId, t.categoryId),
+}));
+
+// --- Tags ---
+export const tags = pgTable('tags', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull().unique(),
+  slug: text('slug').notNull().unique(),
+});
+
+// --- Recipe <-> Tag ---
+export const recipeTags = pgTable('recipe_tags', {
+  recipeId: integer('recipe_id').notNull().references(() => recipes.id, { onDelete: 'cascade' }),
+  tagId: integer('tag_id').notNull().references(() => tags.id, { onDelete: 'cascade' }),
+}, (t) => ({
+  pk: uniqueIndex('recipe_tag_pk').on(t.recipeId, t.tagId),
+}));
+</code></pre>
+
+<h2>Step 4: Schema relations</h2>
+<p>Create <span class="filepath">src/db/relations.ts</span>:</p>
+<pre><code>import { relations } from 'drizzle-orm';
+import { recipes, ingredients, recipeIngredients, categories, recipeCategories, tags, recipeTags } from './schema';
+
+export const recipesRelations = relations(recipes, ({ many }) => ({
+  recipeIngredients: many(recipeIngredients),
+  recipeCategories: many(recipeCategories),
+  recipeTags: many(recipeTags),
+}));
+
+export const ingredientsRelations = relations(ingredients, ({ many }) => ({
+  recipeIngredients: many(recipeIngredients),
+}));
+
+export const recipeIngredientsRelations = relations(recipeIngredients, ({ one }) => ({
+  recipe: one(recipes, { fields: [recipeIngredients.recipeId], references: [recipes.id] }),
+  ingredient: one(ingredients, { fields: [recipeIngredients.ingredientId], references: [ingredients.id] }),
+}));
+
+export const categoriesRelations = relations(categories, ({ many }) => ({
+  recipeCategories: many(recipeCategories),
+}));
+
+export const recipeCategoriesRelations = relations(recipeCategories, ({ one }) => ({
+  recipe: one(recipes, { fields: [recipeCategories.recipeId], references: [recipes.id] }),
+  category: one(categories, { fields: [recipeCategories.categoryId], references: [categories.id] }),
+}));
+
+export const tagsRelations = relations(tags, ({ many }) => ({
+  recipeTags: many(recipeTags),
+}));
+
+export const recipeTagsRelations = relations(recipeTags, ({ one }) => ({
+  recipe: one(recipes, { fields: [recipeTags.recipeId], references: [recipes.id] }),
+  tag: one(tags, { fields: [recipeTags.tagId], references: [tags.id] }),
+}));
+</code></pre>
+
+<div class="tip">
+  <strong>Key insight:</strong> Drizzle relations are <em>query helpers</em>, not database constraints. Foreign keys are defined in <code>references()</code> on the table columns. Relations just tell Drizzle how to join when you use <code>findMany()</code> with <code>with</code>.
+</div>
+
+<h2>Step 5: DB connection</h2>
+<p>Create <span class="filepath">src/db/index.ts</span>:</p>
+<pre><code>import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
+import * as schema from './schema';
+import * as relations from './relations';
+
+const connectionString = process.env.DATABASE_URL!;
+const client = postgres(connectionString);
+export const db = drizzle(client, { schema: { ...schema, ...relations } });</code></pre>
+
+<h2>Step 6: Drizzle config &amp; migrate</h2>
+<p>Create <span class="filepath">drizzle.config.ts</span>:</p>
+<pre><code>import { defineConfig } from 'drizzle-kit';
+
+export default defineConfig({
+  schema: './src/db/schema.ts',
+  out: './drizzle',
+  dialect: 'postgresql',
+  dbCredentials: { url: process.env.DATABASE_URL! },
+});</code></pre>
+
+<div class="cmd">
+  <span>$</span> npx drizzle-kit generate
+</div>
+<div class="cmd">
+  <span>$</span> npx drizzle-kit migrate
+</div>
+
+<h2>What you learned</h2>
+<ul>
+  <li class="check"> Setting up a Hono + Drizzle project from scratch</li>
+  <li class="check"> Defining PostgreSQL enums with Drizzle's <code>pgEnum</code></li>
+  <li class="check"> Many-to-many relationships via join tables with extra columns (quantity)</li>
+  <li class="check"> Drizzle relations for query-time joins</li>
+  <li class="check"> Composite unique indexes on join tables</li>
+  <li class="check"> Cascade deletes on foreign keys</li>
+</ul>
+
+<p>When you're ready, ask me to scaffold the project and we'll move to Lesson 2: OpenAPI route definitions.</p>
+</body>
+</html>

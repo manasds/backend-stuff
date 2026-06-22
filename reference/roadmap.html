@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recipe API — Roadmap</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7f8;
+      --surface: #ffffff;
+      --surface-soft: #f9fbfb;
+      --text: #1f2428;
+      --muted: #697177;
+      --line: #dfe6e8;
+      --accent: #315c4b;
+      --done-bg: #e8f5ee;
+      --done-text: #1f6b45;
+      --wip-bg: #fff4d7;
+      --wip-text: #8a5a05;
+      --todo-bg: #f0f2f4;
+      --todo-text: #5d666e;
+      --shadow: 0 18px 48px rgba(31, 42, 47, 0.07);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(245, 247, 248, 0.96)),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 48px 20px;
+    }
+
+    main {
+      width: min(920px, 100%);
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 30px;
+    }
+
+    h1 {
+      max-width: 720px;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      line-height: 1.05;
+      font-weight: 760;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      max-width: 620px;
+      color: var(--muted);
+      font-size: 1rem;
+      margin-top: 12px;
+    }
+
+    .roadmap {
+      display: grid;
+      gap: 14px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 36px 0 14px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .section-title::after {
+      content: "";
+      height: 1px;
+      flex: 1;
+      background: var(--line);
+    }
+
+    .phase {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 20px 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .phase-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    .phase-name {
+      font-weight: 740;
+      font-size: 1rem;
+      color: #252a2e;
+    }
+
+    .badge {
+      white-space: nowrap;
+      font-size: 0.72rem;
+      line-height: 1;
+      padding: 0.38rem 0.62rem;
+      border-radius: 99px;
+      font-weight: 760;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .badge-done { background: var(--done-bg); color: var(--done-text); }
+    .badge-wip  { background: var(--wip-bg); color: var(--wip-text); }
+    .badge-todo { background: var(--todo-bg); color: var(--todo-text); }
+
+    .task {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 7px 0;
+      font-size: 0.94rem;
+      color: #3f474d;
+    }
+
+    .task + .task {
+      border-top: 1px solid #edf1f2;
+    }
+
+    .task.done { color: #8a9398; }
+    .task.done .task-text { text-decoration: line-through; text-decoration-color: #b6bdc1; }
+    .task.wip  { color: var(--wip-text); }
+
+    .icon {
+      display: grid;
+      place-items: center;
+      width: 21px;
+      height: 21px;
+      flex: 0 0 21px;
+      margin-top: 1px;
+      border-radius: 50%;
+      background: #f1f4f2;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .done .icon {
+      background: var(--done-bg);
+      color: var(--done-text);
+    }
+
+    .wip .icon {
+      background: var(--wip-bg);
+      color: var(--wip-text);
+    }
+
+    .schema-box {
+      background: var(--surface-soft);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 22px;
+      font-family: "SF Mono", "Cascadia Code", "Liberation Mono", Consolas, monospace;
+      font-size: 0.87rem;
+      line-height: 1.75;
+      overflow-x: auto;
+      box-shadow: var(--shadow);
+    }
+
+    b {
+      color: #22282c;
+    }
+
+    .sc {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .grn { color: var(--done-text); }
+    .red { color: #a43c35; }
+    .ylw { color: var(--wip-text); }
+
+    .task-line {
+      color: var(--muted);
+      margin-top: 14px;
+      font-size: 0.86rem;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 32px 14px;
+      }
+
+      .phase {
+        padding: 17px 16px;
+      }
+
+      .phase-header {
+        align-items: flex-start;
+      }
+
+      .task {
+        font-size: 0.9rem;
+      }
+
+      .schema-box {
+        padding: 16px;
+        font-size: 0.78rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<main>
+<header>
+  <h1>Recipe Manager API</h1>
+  <p class="subtitle">A compact roadmap for building the schema, OpenAPI routes, filtering, and search features.</p>
+</header>
+
+<section class="roadmap" aria-label="Learning roadmap">
+
+<h2 class="section-title">Routes implemented</h2>
+
+<div class="phase">
+  <div class="task done"><span class="icon">✓</span><span class="task-text">GET    /recipes</span></div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">GET    /recipes/{id}</span></div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">POST   /recipes</span></div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">PATCH  /recipes/{id}</span></div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">DELETE /recipes/{id}</span></div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">GET    /ingredients</span></div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">GET    /ingredients/{id}</span></div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">POST   /ingredients</span></div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">PATCH  /ingredients/{id}</span></div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">DELETE /ingredients/{id}</span></div>
+</div>
+
+<div class="phase">
+  <div class="phase-header">
+    <span class="phase-name">Phase 1: Schema &amp; DB</span>
+    <span class="badge badge-done">done</span>
+  </div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">Project scaffold (packages, tsconfig)</span></div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">Design schema entities</span></div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">Write Drizzle schema — all 3 tables done</span></div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">Set up DB connection &amp; run migration</span></div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">Seed test data</span></div>
+</div>
+
+<div class="phase">
+  <div class="phase-header">
+    <span class="phase-name">Phase 2: OpenAPI Routes</span>
+    <span class="badge badge-done">done</span>
+  </div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">Define Zod schemas for requests/responses</span></div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">CRUD routes for recipes — all done</span></div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">CRUD routes for ingredients — all done</span></div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">POST /recipes — create recipe with optional ingredients[] (transaction + join table writes)</span></div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">Unique constraint on recipe_ingredients (recipeId, ingredientId)</span></div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">OpenAPI spec generation at /doc</span></div>
+</div>
+
+<h2 class="section-title">Active todos</h2>
+
+<div class="phase">
+  <div class="phase-header">
+    <span class="phase-name">Nested ingredients via Drizzle relations</span>
+    <span class="badge badge-wip">wip</span>
+  </div>
+  <div class="task wip"><span class="icon">◷</span><span class="task-text">Add Drizzle relations to schema (recipes → recipe_ingredients → ingredients)</span></div>
+  <div class="task wip"><span class="icon">◷</span><span class="task-text">Replace Map-based join in GET /recipes with relational query (<code>findMany</code> + <code>with</code>)</span></div>
+  <div class="task wip"><span class="icon">◷</span><span class="task-text">Update GET /recipes/{id} to return same nested shape (recipe + ingredients with full ingredient details)</span></div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">Fix GET /recipes list handler — was referencing undefined variable, replaced with LEFT JOIN + Map grouping</span></div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">Update list response schema to <code>createdRecipeResponseSchema.array()</code> (recipe + nested ingredients)</span></div>
+</div>
+
+<div class="phase">
+  <div class="phase-header">
+    <span class="phase-name">Phase 3: Filtering &amp; Search</span>
+    <span class="badge badge-todo">todo</span>
+  </div>
+  <div class="task"><span class="icon">○</span><span class="task-text">Filter recipes by ingredient</span></div>
+  <div class="task"><span class="icon">○</span><span class="task-text">Filter by difficulty / type / health score</span></div>
+  <div class="task"><span class="icon">○</span><span class="task-text">Full-text search across title &amp; description</span></div>
+  <div class="task"><span class="icon">○</span><span class="task-text">Pagination</span></div>
+</div>
+
+</section>
+
+<h2 class="section-title">Fixes</h2>
+
+<div class="phase">
+  <div class="phase-header">
+    <span class="phase-name">Dependency update &amp; vulnerability cleanup</span>
+    <span class="badge badge-done">done</span>
+  </div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">Issue: the project had outdated npm dependencies, including major-version gaps for <code>@hono/zod-openapi</code>, <code>zod</code>, <code>typescript</code>, and Node types.</span></div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">Issue: <code>npm audit</code> reported moderate transitive vulnerabilities through the <code>drizzle-kit</code> dependency chain and an old <code>esbuild</code> resolution.</span></div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">Fix: updated direct dependencies to their latest resolved versions, regenerated <code>package-lock.json</code>, and added a narrow npm override so <code>esbuild</code> resolves to a non-vulnerable version.</span></div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">Fix: updated TypeScript config for TypeScript 6 by setting <code>rootDir</code> and explicit Node types, then verified <code>npm run build</code>, <code>npm audit</code>, and <code>npm outdated</code>.</span></div>
+</div>
+
+<div class="phase">
+  <div class="phase-header">
+    <span class="phase-name">Route fixes &amp; type corrections</span>
+    <span class="badge badge-done">done</span>
+  </div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">Fix: PATCH /recipes path was <code>/tasks/{id}</code> (copy-paste bug) — corrected to <code>/recipes/{id}</code></span></div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">Fix: PATCH handler not registered in recipes index.route.ts — added <code>.openapi(routes.patch, handlers.patch)</code></span></div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">Fix: ingredients <code>listOne</code> handler returned 200 with null on not found — added 404 check</span></div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">Fix: <code>remove</code> handlers returned 200 even if nothing deleted — added <code>.returning()</code> + 404 check</span></div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">Fix: patch handler error shape used <code>code: 400</code> (number) — changed to <code>"custom"</code> (string) to match ZodError shape</span></div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">Fix: ingredients patch 404 message said "recipe not found" — corrected to "ingredient not found"</span></div>
+  <div class="task done"><span class="icon">✓</span><span class="task-text">Fix: ingredients create route used 404 status for validation error — changed to 400</span></div>
+</div>
+
+<h2 class="section-title">Current Schema</h2>
+
+<div class="schema-box">
+<span class="sc">// Design</span><br><br>
+<span class="grn">✓</span> <b>recipes</b><br>
+&nbsp;&nbsp;id: serial().primaryKey()<br>
+&nbsp;&nbsp;name: text().notNull()<br>
+&nbsp;&nbsp;description: text()<br>
+&nbsp;&nbsp;prep_time: integer()<br>
+&nbsp;&nbsp;cook_time: integer()<br>
+&nbsp;&nbsp;difficulty: difficultyEnum().notNull()<br>
+&nbsp;&nbsp;type: typeEnum().notNull()<br>
+&nbsp;&nbsp;category: text()<br>
+&nbsp;&nbsp;health_score: integer()<br>
+&nbsp;&nbsp;created_at: timestamp().defaultNow()<br>
+&nbsp;&nbsp;updated_at: timestamp().defaultNow()<br><br>
+<span class="grn">✓</span> <b>ingredients</b><br>
+&nbsp;&nbsp;id: serial().primaryKey()<br>
+&nbsp;&nbsp;name: text().notNull().unique()<br>
+&nbsp;&nbsp;baseUnit: text()<br><br>
+<span class="grn">✓</span> <b>recipe_ingredients</b><br>
+&nbsp;&nbsp;id: serial().primaryKey()<br>
+&nbsp;&nbsp;recipeId: integer().notNull().references(() =&gt; recipes.id, { onDelete: 'cascade' })<br>
+&nbsp;&nbsp;ingredientId: integer().notNull().references(() =&gt; ingredients.id, { onDelete: 'cascade' })<br>
+&nbsp;&nbsp;quantity: integer().notNull()<br>
+&nbsp;&nbsp;unit: text()<br>
+&nbsp;&nbsp;notes: text()<br>
+&nbsp;&nbsp;unique(recipeId, ingredientId)
+</div>
+
+<h2>Learnings</h2>
+<ul style="list-style: none; padding: 0; margin-top: 0.75rem;">
+  <li style="padding: 0.3rem 0; font-size: 0.85rem; color: #555; display: flex; gap: 0.5rem;">
+    <span style="color: #991b1b; flex-shrink: 0;">⚠</span>
+    <span><b>Foreign keys on join table, not on main tables.</b> <code>recipes</code> and <code>ingredients</code> have no FK to each other. The connection lives only in <code>recipe_ingredients</code> — both FKs (<code>recipeId</code>, <code>ingredientId</code>) are there. That's what makes it a real many-to-many.</span>
+  </li>
+</ul>
+
+<div class="task-line">Last updated: after setting goals in GOAL.md + roadmap cleanup</div>
+
+</main>
+</body>
+</html>
