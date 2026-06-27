@@ -1,15 +1,23 @@
-import { Worker } from "bullmq"; 
+import { Worker } from "bullmq";
 import { connection } from "./queue";
-
+import sharp from "sharp";
 const worker = new Worker(
-    "emails" ,
-    async (job) => {
-        console.log(`Processing job ${job.id}` , job.data);
-        await new Promise(r => setTimeout(r,3000)) ;
-        console.log(`Done sending to ${job.data.to}`) ;
-    } ,
-    {connection}
+  "image",
+  async (job) => {
+    const {inputPath , outputPath} = job.data ;
+    await sharp(inputPath)
+      .resize({
+        width: 300, 
+        fit: "inside", 
+        withoutEnlargement: true,
+      })
+      .toFile(outputPath);
+    return { outputPath, jobId: job.data.jobId };
+  },
+  { connection, concurrency: 5 },
 );
 
-worker.on("completed" , (job) => console.log(`${job.id} completed`)) ;
-worker.on("failed" , (job ,err) => console.log(`${job?.id} failed` , err.message))
+worker.on("completed", (job) => console.log(`${job.id} completed`));
+worker.on("failed", (job, err) =>
+  console.log(`${job?.id} failed`, err.message),
+);
