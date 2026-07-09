@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { ImageQueue } from "./queue.js";
 import { randomUUID } from "node:crypto";
+import { File } from "node:buffer";
 import path from "node:path";
 import { objectKeys } from "./paths.js";
 import { putObject, getDownloadUrl } from "./storage.js";
