@@ -3,11 +3,15 @@ import { cors } from "hono/cors";
 import { ImageQueue } from "./queue";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
-import { mkdir, writeFile, readFile } from "node:fs/promises";
-import { uploadPaths } from "./paths";
+import { objectKeys } from "./paths";
+import { putObject, getDownloadUrl } from "./storage";
+
 const app = new Hono();
 
-app.use("/*", cors({ origin: "http://localhost:3000" }));
+const corsOrigin = process.env.CORS_ORIGIN ?? "http://localhost:3000";
+app.use("/*", cors({ origin: corsOrigin }));
+
+app.get("/health", (c) => c.json({ ok: true }));
 
 app.post("/files", async (c) => {
   const body = await c.req.parseBody();
@@ -19,14 +23,13 @@ app.post("/files", async (c) => {
 
   const jobId = randomUUID();
   const ext = path.extname(file.name) || ".jpg";
-  const { inputPath, outputPath } = uploadPaths(jobId, ext);
+  const { inputKey, outputKey } = objectKeys(jobId, ext);
+
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
-  await mkdir(path.dirname(inputPath), { recursive: true });
-  await mkdir(path.dirname(outputPath), { recursive: true });
-  await writeFile(inputPath, buffer);
+  await putObject(inputKey, buffer, file.type || "application/octet-stream");
 
-  await ImageQueue.add("resize", { jobId, inputPath, outputPath }, { jobId });
+  await ImageQueue.add("resize", { jobId, inputKey, outputKey }, { jobId });
   return c.json({ jobId, status: "processing" }, 202);
 });
 
@@ -38,20 +41,11 @@ app.get("/files/:jobId", async (c) => {
     return c.json({ error: "not ready yet" }, 404);
   }
 
-  const { outputPath } = job.returnvalue as { outputPath: string };
-  const imageBytes = await readFile(outputPath);
+  const { outputKey } = job.returnvalue as { outputKey: string };
+  const url = await getDownloadUrl(outputKey);
 
-  const ext = path.extname(outputPath).toLowerCase();
-  const contentType =
-    ext === ".png"
-      ? "image/png"
-      : ext === ".webp"
-        ? "image/webp"
-        : "image/jpeg";
-
-  // Send raw bytes back — browser can display as <img src="...">
-  return c.body(imageBytes, 200, {
-    "Content-Type": contentType,
-  });
+  // Client downloads the processed image directly from R2.
+  return c.json({ jobId, status: "completed", url }, 200);
 });
+
 export default app;

@@ -1,12 +1,7 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
-const srcDir = path.dirname(fileURLToPath(import.meta.url));
-export const projectRoot = path.resolve(srcDir, "..");
-export const uploadsDir = path.join(projectRoot, "uploads");
-
-export function uploadPaths(jobId: string, ext: string) {
-  const inputPath = path.join(uploadsDir, "originals", `${jobId}${ext}`);
-  const outputPath = path.join(uploadsDir, "processed", `${jobId}${ext}`);
-  return { inputPath, outputPath };
+// R2 object keys (not local filesystem paths). The API and worker are separate
+// services, so they share state only through R2 + Redis.
+export function objectKeys(jobId: string, ext: string) {
+  const inputKey = `originals/${jobId}${ext}`;
+  const outputKey = `processed/${jobId}${ext}`;
+  return { inputKey, outputKey };
 }
