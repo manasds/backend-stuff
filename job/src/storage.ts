@@ -15,6 +15,9 @@ const accountId = requireEnv("R2_ACCOUNT_ID");
 export const bucket = requireEnv("R2_BUCKET");
 
 // Cloudflare R2 exposes an S3-compatible API. Region must be "auto".
+// R2 does not support the flexible checksums that AWS SDK v3 now sends by
+// default, so restrict checksum calc/validation to WHEN_REQUIRED or PutObject
+// fails.
 export const s3 = new S3Client({
   region: "auto",
   endpoint:
@@ -24,6 +27,8 @@ export const s3 = new S3Client({
     accessKeyId: requireEnv("R2_ACCESS_KEY_ID"),
     secretAccessKey: requireEnv("R2_SECRET_ACCESS_KEY"),
   },
+  requestChecksumCalculation: "WHEN_REQUIRED",
+  responseChecksumValidation: "WHEN_REQUIRED",
 });
 
 export async function putObject(

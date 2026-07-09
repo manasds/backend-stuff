@@ -11,6 +11,11 @@ const app = new Hono();
 const corsOrigin = process.env.CORS_ORIGIN ?? "http://localhost:3000";
 app.use("/*", cors({ origin: corsOrigin }));
 
+app.onError((err, c) => {
+  console.error("Request failed:", err);
+  return c.json({ error: err.message }, 500);
+});
+
 app.get("/health", (c) => c.json({ ok: true }));
 
 app.post("/files", async (c) => {
