@@ -1,6 +1,6 @@
 import { Worker } from "bullmq";
-import { connection } from "./queue";
-import { getObject, putObject } from "./storage";
+import { connection } from "./queue.js";
+import { getObject, putObject } from "./storage.js";
 import path from "node:path";
 import sharp from "sharp";
 

@@ -1,10 +1,10 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { ImageQueue } from "./queue";
+import { ImageQueue } from "./queue.js";
 import { randomUUID } from "node:crypto";
 import path from "node:path";
-import { objectKeys } from "./paths";
-import { putObject, getDownloadUrl } from "./storage";
+import { objectKeys } from "./paths.js";
+import { putObject, getDownloadUrl } from "./storage.js";
 
 const app = new Hono();
 
